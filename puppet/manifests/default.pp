@@ -6,7 +6,7 @@ $server_network_dns = [ '10.0.6.1' ]
 $storage_network_ip_prefix = '10.0.5.'
 $storage_network_netmask = 24
 
-node /^hyp\d{1,2}-\d{1,2}$/ {
+node /^hyp\d{1,2}-(\d{1,2})$/ {
 
 	# Network config
   kmod::load { 'bonding': }
@@ -16,41 +16,49 @@ node /^hyp\d{1,2}-\d{1,2}$/ {
     ports   => [ 'eno1', 'eno2', 'eno3', 'eno4' ],
     method  => 'static',
     mode    => '802.3ad',
-    address => "${server_network_ip_prefix}${2}",
+    address => "${server_network_ip_prefix}${1}",
     netmask => $server_network_netmask,
     gateway => $server_network_gateway,
     require => Kmod::Load['bonding'],
   }
   debnet::iface::static { 'bond0.5':
-    address => "${storage_network_ip_prefix}${2}",
+    address => "${storage_network_ip_prefix}${1}",
     netmask => $storage_network_netmask,
     require => Kmod::Load['8021q'],
   }
+  anchor { 'networking': }
 
   # Helpful user utilities
   package { [ 'htop', 'nmon', 'screen' ]:
-    ensure => installed,
+    ensure  => installed,
+    require => Anchor['networking'],
   }
 
   # Helpful management tools
-  class { 'megacli':
-    repo_suite => 'wily', # Xenial not officially available yet
-  }
+  #class { 'megacli':
+  #  repo_suite => 'wily', # Xenial not officially available yet
+  #}
   package { 'lsscsi':
-    ensure => installed,
+    ensure  => installed,
+    require => Anchor['networking'],
   }
 
   # System utils
   package { 'ntp': # needed by Ceph Monitors
-    ensure => installed,
+    ensure  => installed,
+    require => Anchor['networking'],
   }
   class { 'resolvconf':
     nameservers   => $server_network_dns,
     domain        => 'infra.home.brwyatt.net',
     override_dhcp => true,
+    require       => Anchor['networking'],
   }
 
   # Ceph
+  Exec {
+    path => '/bin:/usr/bin:/sbin:/usr/sbin',
+  }
   class { 'ceph':
     mon     => true,
     osd     => true,
@@ -96,19 +104,19 @@ node /^hyp\d{1,2}-\d{1,2}$/ {
       },
     },
     disks   => {
-      '2:2:0:0/5:0:0:0' => {}.
-      '2:2:1:0/5:0:0:0' => {}.
-      '2:2:2:0/5:0:0:0' => {}.
-      '2:2:3:0/5:0:0:0' => {}.
-      '2:2:4:0/5:0:0:0' => {}.
-      '2:2:5:0/5:0:0:0' => {}.
+      '2:2:0:0/5:0:0:0' => {},
+      '2:2:1:0/5:0:0:0' => {},
+      '2:2:2:0/5:0:0:0' => {},
+      '2:2:3:0/5:0:0:0' => {},
+      '2:2:4:0/5:0:0:0' => {},
+      '2:2:5:0/5:0:0:0' => {},
     },
   }
 
   # Ordering
-  Debnet::Iface::Bond['bond0'] -> Package<| |>
   Package['ntp'] -> Class['ceph']
-  Package['resolveconf'] -> Class['ceph']
-  Debnet::Iface::Bond['bond0'] -> Class['ceph']
-  Debnet::Iface::Static['bond0.0'] -> Class['ceph']
+  Class['resolvconf'] -> Class['ceph']
+  Debnet::Iface::Bond['bond0'] -> Anchor['networking']
+  Debnet::Iface::Static['bond0.5'] -> Anchor['networking']
+  Anchor['networking'] -> Class['ceph']
 }
