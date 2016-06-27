@@ -1,4 +1,6 @@
-mod 'brwyatt/ceph', :git => 'https://github.com:brwyatt/puppet-ceph'
+forge "https://forgeapi.puppetlabs.com"
+
+mod 'brwyatt/ceph', :git => 'https://github.com/brwyatt/puppet-ceph'
 mod 'camptocamp/augeas', '1.4.2'
 mod 'camptocamp/kmod', '2.1.0'
 mod 'gardouille/megacli', '0.2.1'
