@@ -7,6 +7,7 @@ $storage_network_ip_prefix = '10.0.5.'
 $storage_network_netmask = 24
 
 node /^hyp\d{1,2}-(\d{1,2})$/ {
+  $my_ip = 100 + $1
 
 	# Network config
   kmod::load { 'bonding': }
@@ -16,13 +17,13 @@ node /^hyp\d{1,2}-(\d{1,2})$/ {
     ports   => [ 'eno1', 'eno2', 'eno3', 'eno4' ],
     method  => 'static',
     mode    => '802.3ad',
-    address => "${server_network_ip_prefix}${1}",
+    address => "${server_network_ip_prefix}${my_ip}",
     netmask => $server_network_netmask,
     gateway => $server_network_gateway,
     require => Kmod::Load['bonding'],
   }
   debnet::iface::static { 'bond0.5':
-    address => "${storage_network_ip_prefix}${1}",
+    address => "${storage_network_ip_prefix}${my_ip}",
     netmask => $storage_network_netmask,
     require => Kmod::Load['8021q'],
   }
