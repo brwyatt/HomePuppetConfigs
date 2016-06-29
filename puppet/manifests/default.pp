@@ -11,7 +11,7 @@ node /^hyp(\d{1,2})$/ {
   $my_server_ip = "${server_network_ip_prefix}${my_last_octet}"
   $my_storage_ip = "${storage_network_ip_prefix}${my_last_octet}"
 
-	# Network config
+  # Network config
   kmod::load { 'bonding': }
   kmod::load { '8021q': }
   debnet::iface::loopback { 'lo': }
@@ -25,9 +25,14 @@ node /^hyp(\d{1,2})$/ {
     require => Kmod::Load['bonding'],
   }
   debnet::iface::static { 'bond0.5':
+    order   => 1000,
     address => $my_storage_ip,
     netmask => $storage_network_netmask,
     require => Kmod::Load['8021q'],
+  }
+
+  service { 'networking':
+    ensure => running,
   }
   anchor { 'networking': }
 
@@ -151,7 +156,9 @@ node /^hyp(\d{1,2})$/ {
   # Ordering
   Package['ntp'] -> Class['ceph']
   Class['resolvconf'] -> Class['ceph']
-  Debnet::Iface::Bond['bond0'] -> Anchor['networking']
-  Debnet::Iface::Static['bond0.5'] -> Anchor['networking']
+  Debnet::Iface::Bond['bond0'] -> Service['networking']
+  Debnet::Iface::Static['bond0.5'] -> Service['networking']
+  Concat['/etc/network/interfaces'] ~> Service['networking']
+  Service['networking'] -> Anchor['networking']
   Anchor['networking'] -> Class['ceph']
 }
