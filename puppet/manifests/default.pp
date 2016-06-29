@@ -8,7 +8,8 @@ $storage_network_netmask = 24
 
 node /^hyp(\d{1,2})$/ {
   $my_last_octet = 100 + $1
-  $my_ip = "${server_network_ip_prefix}${my_last_octet}"
+  $my_server_ip = "${server_network_ip_prefix}${my_last_octet}"
+  $my_storage_ip = "${storage_network_ip_prefix}${my_last_octet}"
 
 	# Network config
   kmod::load { 'bonding': }
@@ -18,13 +19,13 @@ node /^hyp(\d{1,2})$/ {
     ports   => [ 'eno1', 'eno2', 'eno3', 'eno4' ],
     method  => 'static',
     mode    => '802.3ad',
-    address => $my_ip,
+    address => $my_server_ip,
     netmask => $server_network_netmask,
     gateway => $server_network_gateway,
     require => Kmod::Load['bonding'],
   }
   debnet::iface::static { 'bond0.5':
-    address => $my_ip,
+    address => $my_storage_ip,
     netmask => $storage_network_netmask,
     require => Kmod::Load['8021q'],
   }
@@ -68,7 +69,7 @@ node /^hyp(\d{1,2})$/ {
   class { 'ssh':
     ssh_config_forward_x11    => false,
     ssh_config_forward_agent  => false,
-    sshd_listen_address       => [ $my_ip ],
+    sshd_listen_address       => [ $my_server_ip ],
     sshd_config_banner        => '/etc/ssh/login_banner',
     sshd_banner_content       => join([
       " * Servername: ${::fqdn}",
