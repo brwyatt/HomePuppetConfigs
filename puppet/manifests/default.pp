@@ -6,8 +6,9 @@ $server_network_dns = [ '10.0.6.1' ]
 $storage_network_ip_prefix = '10.0.5.'
 $storage_network_netmask = 24
 
-node /^hyp\d{1,2}-(\d{1,2})$/ {
-  $my_ip = 100 + $1
+node /^hyp(\d{1,2})$/ {
+  $my_last_octet = 100 + $1
+  $my_ip = "${server_network_ip_prefix}${my_last_octet}"
 
 	# Network config
   kmod::load { 'bonding': }
@@ -17,13 +18,13 @@ node /^hyp\d{1,2}-(\d{1,2})$/ {
     ports   => [ 'eno1', 'eno2', 'eno3', 'eno4' ],
     method  => 'static',
     mode    => '802.3ad',
-    address => "${server_network_ip_prefix}${my_ip}",
+    address => $my_ip,
     netmask => $server_network_netmask,
     gateway => $server_network_gateway,
     require => Kmod::Load['bonding'],
   }
   debnet::iface::static { 'bond0.5':
-    address => "${storage_network_ip_prefix}${my_ip}",
+    address => $my_ip,
     netmask => $storage_network_netmask,
     require => Kmod::Load['8021q'],
   }
@@ -44,6 +45,15 @@ node /^hyp\d{1,2}-(\d{1,2})$/ {
     require => Anchor['networking'],
   }
 
+  user { 'brwyatt':
+    ensure     => present,
+    groups     => [ 'adm', 'cdrom', 'sudo', 'dip', 'plugdev', 'lxd',
+      'lpadmin', 'sambashare' ],
+    managehome => true,
+    password   => '$6$04TmjJkg85OLxV$hiKHI1LSlvAFmqnUbVXXsmm.T91BZ11zWbVYkssR6Xs8q5uql0x1n6fELdgW9rLRcnLQluscXJ/owkAFzuAZA0',
+    before     => Class['ssh'],
+  }
+
   # System utils
   package { 'ntp': # needed by Ceph Monitors
     ensure  => installed,
@@ -55,6 +65,29 @@ node /^hyp\d{1,2}-(\d{1,2})$/ {
     override_dhcp => true,
     require       => Anchor['networking'],
   }
+  class { 'ssh':
+    ssh_config_forward_x11    => false,
+    ssh_config_forward_agent  => false,
+    sshd_listen_address       => [ $my_ip ],
+    sshd_config_banner        => '/etc/ssh/login_banner',
+    sshd_banner_content       => join([
+      " * Servername: ${::fqdn}",
+      " * IP Address: ${::ipaddress}",
+      ' * * This system is monitored and activities are recorded.',
+      ' * * Unauthorized use is prohibited.',
+      "\n",
+    ], "\n"),
+    sshd_allow_tcp_forwarding => 'no',
+    sshd_x11_forwarding       => 'no',
+    keys                      => {
+      'brwyatt@brwyatt.net' => {
+        'ensure' => 'present',
+        'user'   => 'brwyatt',
+        'type'   => 'ssh-rsa',
+        'key'    => 'AAAAB3NzaC1yc2EAAAADAQABAAACAQDA3zFRckFN4FwVLOQOMzzW/VEquBskxUHj7olTrfRg2On8rCjURbvZXxofXzizuPC6v9hSc3qQhB4jJiVv67NJ3jzKNI7QuxwxNw0mPUknZvpF0tFepnIRJvUDLheXUO+UUM0EtX6Oi2f+C2b5+QRXufgFbjCB9JJIH3idDmesL1H+lRvwIBh2LWHn8OPh6ZmtmNhgWTMjtE8pueKSlBOS/QdzbWKqFFVU8xLJn8aNhgC7iTqygexYaW+ZdhGtzUikJy06lxzUqWq42dazLM9FJ107amZ0xA3tmdvVZIiuPbkqV1+gmFxfzzETLADOHOyX/swP12nwqwq/adv9663WgYUb5tWAU0SptRh8guVYGbB5elRfTPr0NglZrQPXotxc3PKRv8lmY9DRdv3VIwMKt1zFOqxX9CwJ+rRKhSGUy+Va8YHSc6Cbk4qhUygFJKkfWBdRdMkOsVVj3omSYANAdQeyYkBFVPk1WW+tgqGW/nTpsRnvknewjnuM0S+kaBRb0QvrYCzyAQmInkn4naWdDKjux1BbEaL3il+ZWeG53Sh/xXJcTUUxgBgw0lALrXYYyG8wheGu9ic2hiC6ubab2BZ67AJvknrjW7cm17jVVtmh9MFrhM37fXvnUnN91uTk31tzIo/v3qhuYizOzfe5CCqA1BQ9Yoqrdus7jw1YBQ==',
+      },
+    },
+  }
 
   # Ceph
   Exec {
@@ -65,8 +98,8 @@ node /^hyp\d{1,2}-(\d{1,2})$/ {
     osd     => true,
     conf    => {
       'global' => {
-        #'fsid'                      => '62ed9bd6-adf4-11e4-8fb5-3c970ebb2b86', # Don't use this default, use `uuidgen`!
-        'mon_initial_members'       => 'hyp7-8',
+        'fsid'                      => '62ed9bd6-adf4-11e4-8fb5-3c970ebb2b86', # Don't use this default, use `uuidgen`!
+        'mon_initial_members'       => 'hyp8',
         'mon_host'                  => '10.0.6.108,10.0.6.110,10.0.6.112',
         'public_network'            => "${server_network_ip_prefix}0/24",
         'cluster_network'           => "${storage_network_ip_prefix}0/24",
@@ -78,7 +111,7 @@ node /^hyp\d{1,2}-(\d{1,2})$/ {
         'osd_journal_size' => '15000',
       },
     },
-    #mon_key => 'AQA7yNlUMy3sFhAA62XHf57L0QhSI44qqqOVXA==', # Don't use this default, use `ceph-authtool --gen-key`
+    mon_key => 'AQA7yNlUMy3sFhAA62XHf57L0QhSI44qqqOVXA==', # Don't use this default, use `ceph-authtool --gen-key`
     keys    => {
       '/etc/ceph/ceph.client.admin.keyring'          => {
         'user'     => 'client.admin',
