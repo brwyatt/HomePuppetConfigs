@@ -143,14 +143,14 @@ node /^hyp(\d{1,2})$/ {
         'caps_mon' => 'allow profile bootstrap-mds',
       },
     },
-    disks   => {
-      '2:2:0:0/5:0:0:0' => {},
-      '2:2:1:0/5:0:0:0' => {},
-      '2:2:2:0/5:0:0:0' => {},
-      '2:2:3:0/5:0:0:0' => {},
-      '2:2:4:0/5:0:0:0' => {},
-      '2:2:5:0/5:0:0:0' => {},
-    },
+    disks   => parsejson(inline_template('
+    {
+      <% first = true -%>
+      <% @diskinfo_blockdev_model_to_hctl["PERC H700"].each do |dev| -%>
+      <% if(!first) then -%>,<% end -%>"<%= dev -%>/<%= @diskinfo_blockdev_model_to_hctl["Kingston SHPM228"][0] -%>": {}
+      <% first = false -%>
+      <% end -%>
+    }')),
   }
 
   # Ordering
