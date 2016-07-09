@@ -64,6 +64,9 @@ node /^hyp(\d{1,2})$/ {
     servers => $server_network_dns, #Same servers, for now
     require => Service['networking'],
   }
+  limits::fragment { 'ceph/-/nofile':
+    value => '10240',
+  }
   class { 'resolvconf':
     nameservers   => $server_network_dns,
     domain        => 'infra.home.brwyatt.net',
@@ -156,6 +159,7 @@ node /^hyp(\d{1,2})$/ {
   Debnet::Iface::Bond['bond0'] -> Service['networking']
   Debnet::Iface::Static['bond0.5'] -> Service['networking']
   Concat['/etc/network/interfaces'] ~> Service['networking']
+  Limits::Fragment['ceph/-/nofile'] -> Class['ceph']
   Class['ntp'] -> Class['ceph']
   Class['resolvconf'] -> Class['ceph']
   Service['networking'] -> Class['ceph']
