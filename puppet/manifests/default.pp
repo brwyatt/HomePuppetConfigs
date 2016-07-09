@@ -60,9 +60,9 @@ node /^hyp(\d{1,2})$/ {
   }
 
   # System utils
-  package { 'ntp': # needed by Ceph Monitors
-    ensure  => installed,
-    require => Anchor['networking'],
+  class { 'ntp':
+    servers => $server_network_dns, #Same servers, for now
+    require => Service['networking'],
   }
   class { 'resolvconf':
     nameservers   => $server_network_dns,
