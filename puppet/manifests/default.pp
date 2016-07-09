@@ -34,12 +34,11 @@ node /^hyp(\d{1,2})$/ {
   service { 'networking':
     ensure => running,
   }
-  anchor { 'networking': }
 
   # Helpful user utilities
   package { [ 'htop', 'nmon', 'screen' ]:
     ensure  => installed,
-    require => Anchor['networking'],
+    require => Service['networking'],
   }
 
   # Helpful management tools
@@ -48,7 +47,7 @@ node /^hyp(\d{1,2})$/ {
   #}
   package { 'lsscsi':
     ensure  => installed,
-    require => Anchor['networking'],
+    require => Service['networking'],
   }
 
   user { 'brwyatt':
@@ -69,7 +68,7 @@ node /^hyp(\d{1,2})$/ {
     nameservers   => $server_network_dns,
     domain        => 'infra.home.brwyatt.net',
     override_dhcp => true,
-    require       => Anchor['networking'],
+    require       => Service['networking'],
   }
   class { 'ssh':
     ssh_config_forward_x11    => false,
@@ -159,6 +158,5 @@ node /^hyp(\d{1,2})$/ {
   Debnet::Iface::Bond['bond0'] -> Service['networking']
   Debnet::Iface::Static['bond0.5'] -> Service['networking']
   Concat['/etc/network/interfaces'] ~> Service['networking']
-  Service['networking'] -> Anchor['networking']
-  Anchor['networking'] -> Class['ceph']
+  Service['networking'] -> Class['ceph']
 }
