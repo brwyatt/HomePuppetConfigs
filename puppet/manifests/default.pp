@@ -104,7 +104,7 @@ node /^hyp(\d{1,2})$/ {
     conf    => {
       'global' => {
         'fsid'                      => '62ed9bd6-adf4-11e4-8fb5-3c970ebb2b86', # Don't use this default, use `uuidgen`!
-        'mon_initial_members'       => 'hyp8',
+        'mon_initial_members'       => 'hyp8,hyp10,hyp12',
         'mon_host'                  => '10.0.6.108,10.0.6.110,10.0.6.112',
         'public_network'            => "${server_network_ip_prefix}0/24",
         'cluster_network'           => "${storage_network_ip_prefix}0/24",
