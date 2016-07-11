@@ -149,7 +149,9 @@ node /^hyp(\d{1,2})$/ {
     {
       <% first = true -%>
       <% @diskinfo_blockdev_model_to_hctl["PERC H700"].each do |dev| -%>
-      <% if(!first) then -%>,<% end -%>"<%= dev -%>/<%= @diskinfo_blockdev_model_to_hctl["Kingston SHPM228"][0] -%>": {}
+      <% if(!first) then -%>,<% end -%>"<%= dev -%>/<%= @diskinfo_blockdev_model_to_hctl["Kingston SHPM228"][0] -%>": {
+        "dmcrypt": true
+      }
       <% first = false -%>
       <% end -%>
     }')),
