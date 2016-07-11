@@ -114,6 +114,8 @@ node /^hyp(\d{1,2})$/ {
         'auth_supported'            => 'cephx',
         'filestore_xattr_use_omap'  => true,
         'osd_crush_chooseleaf_type' => 0,
+        'osd pool default pg num'   => 720,
+        'osd pool default pgs num'  => 720,
       },
       'osd'    => {
         'osd_journal_size' => '15000',
