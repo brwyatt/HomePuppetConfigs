@@ -1,11 +1,37 @@
 node 'devtop' {
   class { 'apt':
+    purge  => {
+      'sources.list'   => true,
+      'sources.list.d' => true,
+    },
     update => {
       frequency => 'daily',
     },
   }
 
-  apt::source { 'System76 Development':
+  file { '/etc/apt/sources.list.d/canonical_ubuntu.list':
+    ensure  => present,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0644',
+    content => join([
+      'deb http://us.archive.ubuntu.com/ubuntu/ xenial main restricted',
+      'deb http://us.archive.ubuntu.com/ubuntu/ xenial-updates main restricted',
+      'deb http://us.archive.ubuntu.com/ubuntu/ xenial universe',
+      'deb http://us.archive.ubuntu.com/ubuntu/ xenial-updates universe',
+      'deb http://us.archive.ubuntu.com/ubuntu/ xenial multiverse',
+      'deb http://us.archive.ubuntu.com/ubuntu/ xenial-updates multiverse',
+      'deb http://us.archive.ubuntu.com/ubuntu/ xenial-backports main restricted universe multiverse',
+      'deb http://archive.canonical.com/ubuntu xenial partner',
+      'deb-src http://archive.canonical.com/ubuntu xenial partner',
+      'deb http://security.ubuntu.com/ubuntu xenial-security main restricted',
+      'deb http://security.ubuntu.com/ubuntu xenial-security universe',
+      'deb http://security.ubuntu.com/ubuntu xenial-security multiverse',
+    ], "\n"),
+    notify  => Exec['apt_update'],
+  }
+
+  apt::source { 'system76_development':
     location => 'http://ppa.launchpad.net/system76-dev/stable/ubuntu',
     repos    => 'main',
     key      => {
@@ -14,7 +40,7 @@ node 'devtop' {
     },
   }
 
-  apt::source { 'Syncthing':
+  apt::source { 'syncthing':
     location => 'http://apt.syncthing.net/',
     release  => 'syncthing',
     repos    => 'release',
@@ -29,12 +55,12 @@ node 'devtop' {
     server => 'hkp://keyserver.ubuntu.com',
   }
 
-  apt::source { 'nilstimogard webupd8':
+  apt::source { 'nilstimogard_webupd8':
     location => 'http://ppa.launchpad.net/nilarimogard/webupd8/ubuntu',
     repos    => 'main',
   }
 
-  apt::source { 'Google Chrome':
+  apt::source { 'google_chrome':
     location     => 'http://dl.google.com/linux/chrome/deb/',
     release      => 'stable',
     repos        => 'main',
@@ -49,13 +75,13 @@ node 'devtop' {
     ensure => directory,
     owner  => 'root',
     group  => 'root',
-    mode   => '755',
+    mode   => '0755',
   }
   file { '/etc/lightdm/lightdm.conf.d/50-no-guest.conf':
     ensure  => present,
     owner   => 'root',
     group   => 'root',
-    mode    => '755',
+    mode    => '0755',
     content => join([
       '[SeatDefaults]',
       'allow-guest=false',
@@ -83,6 +109,6 @@ node 'devtop' {
   }
 
   Apt::Key['Launchpad webupd8'] -> Apt::Source['nilstimogard webupd8']
-  Apt::Source <| |> -> Class['apt::update']
-  Class['apt::update'] -> Package <| provider == 'apt' |>
+  Apt::Source <| |> ~> Exec['apt_update']
+  Exec['apt_update'] -> Package <| provider == 'apt' |>
 }
