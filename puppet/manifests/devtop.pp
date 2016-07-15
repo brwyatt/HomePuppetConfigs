@@ -110,5 +110,5 @@ node 'devtop' {
 
   Apt::Key['Launchpad webupd8'] -> Apt::Source['nilstimogard_webupd8']
   Apt::Source <| |> ~> Exec['apt_update']
-  Exec['apt_update'] -> Package <| provider == 'apt' |>
+  Exec['apt_update'] -> Package <| |>
 }
