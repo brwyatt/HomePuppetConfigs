@@ -96,6 +96,9 @@ node 'devtop' {
     ensure => installed,
   }
 
+  package { [ 'htop', 'nmon', 'screen' ]:
+    ensure => installed,
+  }
   package { 'vim-nox':
     ensure => installed,
   }
