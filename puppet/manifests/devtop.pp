@@ -60,7 +60,7 @@ node 'devtop' {
     repos    => 'main',
   }
 
-  apt::source { 'google_chrome':
+  apt::source { 'google-chrome':
     location     => 'http://dl.google.com/linux/chrome/deb/',
     release      => 'stable',
     repos        => 'main',
