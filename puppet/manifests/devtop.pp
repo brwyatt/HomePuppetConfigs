@@ -82,7 +82,7 @@ node 'devtop' {
     ensure => latest,
   }
 
-  Apt::Key <| |> -> Apt::Source <| |>
+  Apt::Key['Launchpad webupd8'] -> Apt::Source['nilstimogard webupd8']
   Apt::Source <| |> -> Class['apt::update']
   Class['apt::update'] -> Package <| provider == 'apt' |>
 }
