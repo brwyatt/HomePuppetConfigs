@@ -9,6 +9,8 @@ node 'devtop' {
     },
   }
 
+  include git
+
   file { '/etc/apt/sources.list.d/canonical_ubuntu.list':
     ensure  => present,
     owner   => 'root',
@@ -87,6 +89,15 @@ node 'devtop' {
       'allow-guest=false',
       '',
     ], "\n"),
+  }
+
+  git::config { 'user.name':
+    user  => 'brwyatt',
+    value => 'Bryan Wyatt',
+  }
+  git::config { 'user.email':
+    user  => 'brwyatt',
+    value => 'brwyatt@gmail.com',
   }
 
   package { 'system76-driver':
