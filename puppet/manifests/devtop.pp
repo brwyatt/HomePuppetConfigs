@@ -114,6 +114,10 @@ node 'devtop' {
     user  => 'brwyatt',
     value => 'vim',
   }
+  git::config { 'push.default':
+    user  => 'brwyatt',
+    value => 'simple',
+  }
 
   package { 'system76-driver':
     ensure => installed,
