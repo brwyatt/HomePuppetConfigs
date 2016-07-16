@@ -73,6 +73,17 @@ node 'devtop' {
     },
   }
 
+  apt::source { 'steam':
+    location     => 'http://repo.steampowered.com/steam/',
+    release      => 'precise',
+    repos        => 'steam',
+    architecture => 'amd64,i386',
+    key          => {
+      id     => 'BA1816EF8E75005FCF5E27A1F24AEA9FB05498B7',
+      source => 'http://repo.steampowered.com/steam/signature.gpg',
+    },
+  }
+
   file { '/etc/lightdm/lightdm.conf.d':
     ensure => directory,
     owner  => 'root',
@@ -119,6 +130,10 @@ node 'devtop' {
   }
 
   package { 'google-chrome-stable':
+    ensure => latest,
+  }
+
+  package { 'steam-launcher':
     ensure => latest,
   }
 
