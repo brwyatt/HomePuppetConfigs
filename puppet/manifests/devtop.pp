@@ -110,6 +110,10 @@ node 'devtop' {
     user  => 'brwyatt',
     value => 'brwyatt@gmail.com',
   }
+  git::config { 'core.editor':
+    user  => 'brwyatt',
+    value => 'vim',
+  }
 
   package { 'system76-driver':
     ensure => installed,
