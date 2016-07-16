@@ -124,6 +124,9 @@ node 'devtop' {
   package { 'vim-nox':
     ensure => installed,
   }
+  package { [ 'python-pip', 'python3-pip' ]:
+    ensure => installed,
+  }
 
   package { [ 'syncthing', 'syncthing-inotify', 'syncthing-gtk' ]:
     ensure => latest,
@@ -133,6 +136,9 @@ node 'devtop' {
     ensure => latest,
   }
 
+  package { 'vlc':
+    ensure => installed,
+  }
   package { 'steam-launcher':
     ensure => latest,
   }
