@@ -126,7 +126,7 @@ node 'devtop' {
     ensure => installed,
   }
 
-  package { [ 'htop', 'nmon', 'screen', 'glipper' ]:
+  package { [ 'htop', 'nmon', 'screen', 'glipper', 'traceroute', 'whois' ]:
     ensure => installed,
   }
   package { 'vim-nox':
