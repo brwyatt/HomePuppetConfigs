@@ -158,6 +158,9 @@ node 'devtop' {
   package { 'vagrant':
     ensure => installed,
   }
+  package { 'zlib1g-dev':
+    ensure => installed,
+  }
 
   # Patch Vagrant for issue #7973
   #   https://github.com/mitchellh/vagrant/issues/7073
