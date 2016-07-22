@@ -151,6 +151,51 @@ node 'devtop' {
     ensure => latest,
   }
 
+  package { [ 'virtualbox', 'virtualbox-dkms', 'virtualbox-ext-pack',
+              'virtualbox-guest-additions-iso' ]:
+    ensure => installed,
+  }
+  package { 'vagrant':
+    ensure => installed,
+  }
+
+  # Patch Vagrant for issue #7973
+  #   https://github.com/mitchellh/vagrant/issues/7073
+  $vagrant_bundler_patch = '/tmp/vagrant_bundler.patch'
+  $vagrant_libs = '/usr/lib/ruby/vendor_ruby/vagrant/'
+  file { $vagrant_bundler_patch:
+    ensure => present,
+    content => join([
+			'--- bundler.rb',
+			'+++ bundler.rb',
+      '@@ -272,7 +272,6 @@ module Vagrant',
+      ' ',
+      '       # Reset the all specs override that Bundler does',
+      '       old_all = Gem::Specification._all',
+      '-      Gem::Specification.all = nil',
+      ' ',
+      '       # /etc/gemrc and so on.',
+      '       old_config = nil',
+      '@@ -286,6 +285,8 @@ module Vagrant',
+      '       end',
+      '       Gem.configuration = NilGemConfig.new',
+      ' ',
+      '+      Gem::Specification.reset',
+      '+',
+      '       # Use a silent UI so that we have no output',
+      '       Gem::DefaultUserInteraction.use_ui(Gem::SilentUI.new) do',
+      '         return yield',
+      '',
+    ], "\n"),
+  }
+  exec { 'Patch Vagrant Bundler':
+    path    => '/usr/bin:/bin',
+    command => "patch -N --silent bundler.rb ${vagrant_bundler_patch}",
+    onlyif  => "patch -N --dry-run --silent bundler.rb ${vagrant_bundler_patch}",
+    cwd     => $vagrant_libs,
+    require => [ File[$vagrant_bundler_patch], Package['vagrant'] ],
+  }
+
   Apt::Key['Launchpad webupd8'] -> Apt::Source['nilstimogard_webupd8']
   Apt::Source <| |> ~> Exec['apt_update']
   Exec['apt_update'] -> Package <| |>
