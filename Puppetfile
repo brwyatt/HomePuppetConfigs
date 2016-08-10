@@ -2,6 +2,7 @@ forge "https://forgeapi.puppetlabs.com"
 moduledir 'puppet/modules'
 
 mod 'brwyatt/diskinfo', :git => 'https://github.com/brwyatt/puppet-diskinfo'
+mod 'brwyatt/ubuntucommon', :git => 'https://github.com/brwyatt/puppet-ubuntucommon'
 mod 'camptocamp/augeas', '1.4.2'
 mod 'camptocamp/kmod', '2.1.0'
 #mod 'gardouille/megacli', '0.2.1'
